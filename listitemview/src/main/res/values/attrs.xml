@@ -17,6 +17,7 @@
             <enum name="icon" value="1" />
             <enum name="circularIcon" value="2" />
             <enum name="avatar" value="3" />
+            <enum name="checkbox" value="4" />
         </attr>
         <attr name="liv_icon" format="reference" />
         <attr name="liv_iconColor" format="color" />
