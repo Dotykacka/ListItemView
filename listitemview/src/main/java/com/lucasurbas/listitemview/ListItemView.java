@@ -126,7 +126,7 @@ public class ListItemView
 
     private OnMenuItemClickListener mActionMenuItemListener;
 
-    private OnCheckedChangeListener mOnCheckedChangeListener;
+    private OnCheckChangedListener mOnCheckedChangeListener;
 
     private String mTitle;
 
@@ -659,7 +659,7 @@ public class ListItemView
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (mOnCheckedChangeListener != null) {
-            mOnCheckedChangeListener.onCheckedChanged(buttonView, isChecked);
+            mOnCheckedChangeListener.onCheckChanged(this, isChecked);
         }
     }
 
@@ -680,7 +680,7 @@ public class ListItemView
         updateListeners();
     }
 
-    public void setOnCheckedChangeListener(@Nullable OnCheckedChangeListener listener) {
+    public void setOnCheckedChangeListener(@Nullable OnCheckChangedListener listener) {
         mOnCheckedChangeListener = listener;
     }
 
@@ -885,5 +885,9 @@ public class ListItemView
                 return new SavedState[size];
             }
         };
+    }
+
+    public interface OnCheckChangedListener {
+        void onCheckChanged(@NonNull ListItemView view, boolean isChecked);
     }
 }
