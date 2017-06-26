@@ -677,6 +677,7 @@ public class ListItemView
     @Override
     public void setOnClickListener(@Nullable OnClickListener listener) {
         mOnClickListener = listener;
+        updateListeners();
     }
 
     public void setOnCheckedChangeListener(@Nullable OnCheckedChangeListener listener) {
