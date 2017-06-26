@@ -22,6 +22,11 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -39,14 +44,16 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  *
  * @author Lucas Urbas
  */
-public class ListItemView extends FrameLayout {
+public class ListItemView
+        extends FrameLayout
+        implements OnClickListener, OnCheckedChangeListener {
 
     // CONSTANTS
 
     public static final int NULL = -1;
 
     @Retention(SOURCE)
-    @IntDef({ MODE_STANDARD, MODE_ICON, MODE_CIRCULAR_ICON, MODE_AVATAR })
+    @IntDef({ MODE_STANDARD, MODE_ICON, MODE_CIRCULAR_ICON, MODE_AVATAR, MODE_CHECKBOX })
     private @interface DisplayMode {}
 
     public static final int MODE_STANDARD = 0;
@@ -56,6 +63,8 @@ public class ListItemView extends FrameLayout {
     public static final int MODE_CIRCULAR_ICON = 2;
 
     public static final int MODE_AVATAR = 3;
+
+    public static final int MODE_CHECKBOX = 4;
 
     // PRIVATE CONSTANTS
 
@@ -73,6 +82,8 @@ public class ListItemView extends FrameLayout {
 
     private static final int ICON_WIDTH_DP = 24;
 
+    private static final int CHECKBOX_WIDTH_DP = 32;
+
     private static final int TITLE_LEADING_SP = 24;
 
     private static final int SUBTITLE_LEADING_SP = 20;
@@ -86,6 +97,8 @@ public class ListItemView extends FrameLayout {
     private TextView mTitleView;
 
     private TextView mSubtitleView;
+
+    private CheckBox mCheckBoxView;
 
     private ImageView mIconView;
 
@@ -108,7 +121,11 @@ public class ListItemView extends FrameLayout {
     @ColorInt
     private int mMenuOverflowColor;
 
+    private OnClickListener mOnClickListener;
+
     private OnMenuItemClickListener mActionMenuItemListener;
+
+    private OnCheckedChangeListener mOnCheckedChangeListener;
 
     private String mTitle;
 
@@ -129,6 +146,8 @@ public class ListItemView extends FrameLayout {
     private int mAvatarWidth;
 
     private int mIconWidth;
+
+    private int mCheckboxWidth;
 
     private int mDisplayMode;
 
@@ -178,6 +197,7 @@ public class ListItemView extends FrameLayout {
         mMenuView = (MenuView) findViewById(R.id.menu_view);
         mTitleView = (TextView) findViewById(R.id.title_view);
         mSubtitleView = (TextView) findViewById(R.id.subtitle_view);
+        mCheckBoxView = (CheckBox) findViewById(R.id.checkbox);
         mIconView = (ImageView) findViewById(R.id.icon_view);
         mTextsLayout = (LinearLayout) findViewById(R.id.texts_layout);
         mCircularIconView = (CircularIconView) findViewById(R.id.circular_icon_view);
@@ -190,6 +210,7 @@ public class ListItemView extends FrameLayout {
 
         mAvatarWidth = (int) ViewUtils.dpToPixel(AVATAR_WIDTH_DP);
         mIconWidth = (int) ViewUtils.dpToPixel(ICON_WIDTH_DP);
+        mCheckboxWidth = (int) ViewUtils.dpToPixel(CHECKBOX_WIDTH_DP);
 
         if (attrs != null) {
             applyAttrs(attrs);
@@ -225,7 +246,9 @@ public class ListItemView extends FrameLayout {
             mForceKeyline = a.getBoolean(R.styleable.ListItemView_liv_forceKeyline, false);
 
             int iconDrawableResId = a.getResourceId(R.styleable.ListItemView_liv_icon, -1);
-            mIconDrawable = AppCompatResources.getDrawable(getContext(), iconDrawableResId);
+            if (iconDrawableResId != -1) {
+                mIconDrawable = AppCompatResources.getDrawable(getContext(), iconDrawableResId);
+            }
 
             mIconColor = a.getColor(R.styleable.ListItemView_liv_iconColor, Color.TRANSPARENT);
             mCircularIconColor = a.getColor(R.styleable.ListItemView_liv_circularIconColor,
@@ -268,7 +291,11 @@ public class ListItemView extends FrameLayout {
                     throw new IllegalArgumentException("keyline value is to small");
                 }
                 break;
-
+            case MODE_CHECKBOX:
+                if (mKeyline - mCheckboxWidth < mPaddingStart) {
+                    throw new IllegalArgumentException("keyline value is to small");
+                }
+                break;
             case MODE_STANDARD:
             default:
                 if (mKeyline < mPaddingStart) {
@@ -282,6 +309,15 @@ public class ListItemView extends FrameLayout {
         return mForceKeyline || mDisplayMode != MODE_STANDARD;
     }
 
+    private void updateListeners() {
+        if (getDisplayMode() == MODE_CHECKBOX
+                || mOnClickListener != null) {
+            super.setOnClickListener(this);
+        } else {
+            super.setOnClickListener(null);
+        }
+    }
+
     private void adjustPadding() {
         int paddingEnd = mPaddingEnd - (isActionMenu() ? (int) ViewUtils.dpToPixel(
                 ACTION_ICON_PADDING_DP) : 0);
@@ -290,6 +326,7 @@ public class ListItemView extends FrameLayout {
         ((MarginLayoutParams) mIconView.getLayoutParams()).setMarginStart(mPaddingStart);
         ((MarginLayoutParams) mCircularIconView.getLayoutParams()).setMarginStart(mPaddingStart);
         ((MarginLayoutParams) mAvatarView.getLayoutParams()).setMarginStart(mPaddingStart);
+        ((MarginLayoutParams) mCheckBoxView.getLayoutParams()).setMarginStart(mPaddingStart);
         MarginLayoutParams textsLayoutParams = (MarginLayoutParams) mTextsLayout.getLayoutParams();
         textsLayoutParams.setMarginEnd(isActionMenu() ? (int) ViewUtils.dpToPixel(4) : 0);
         textsLayoutParams.resolveLayoutDirection(textsLayoutParams.getLayoutDirection());
@@ -481,6 +518,7 @@ public class ListItemView extends FrameLayout {
             ((LayoutParams) mIconView.getLayoutParams()).gravity = Gravity.TOP;
             ((LayoutParams) mCircularIconView.getLayoutParams()).gravity = Gravity.TOP;
             ((LayoutParams) mAvatarView.getLayoutParams()).gravity = Gravity.TOP;
+            ((LayoutParams) mCheckBoxView.getLayoutParams()).gravity = Gravity.TOP;
             mTitleView.setMaxLines(Integer.MAX_VALUE);
             mSubtitleView.setMaxLines(Integer.MAX_VALUE);
         } else {
@@ -491,6 +529,8 @@ public class ListItemView extends FrameLayout {
             ((LayoutParams) mCircularIconView.getLayoutParams()).gravity = Gravity.CENTER_VERTICAL
                     | Gravity.START;
             ((LayoutParams) mAvatarView.getLayoutParams()).gravity = Gravity.CENTER_VERTICAL
+                    | Gravity.START;
+            ((LayoutParams) mCheckBoxView.getLayoutParams()).gravity = Gravity.CENTER_VERTICAL
                     | Gravity.START;
             mTitleView.setMaxLines(1);
             mSubtitleView.setMaxLines(1);
@@ -509,7 +549,7 @@ public class ListItemView extends FrameLayout {
     }
 
     /**
-     * Set display mode on left side. Can be NONE, ICON, CIRCULAR_ICON or AVATAR
+     * Set display mode on left side. Can be NONE, ICON, CIRCULAR_ICON, AVATAR or CHECKBOX
      *
      * @param displayMode a displayMode enum
      */
@@ -520,18 +560,28 @@ public class ListItemView extends FrameLayout {
                 mIconView.setVisibility(VISIBLE);
                 mCircularIconView.setVisibility(GONE);
                 mAvatarView.setVisibility(GONE);
+                mCheckBoxView.setVisibility(GONE);
                 break;
 
             case MODE_CIRCULAR_ICON:
                 mIconView.setVisibility(GONE);
                 mCircularIconView.setVisibility(VISIBLE);
                 mAvatarView.setVisibility(GONE);
+                mCheckBoxView.setVisibility(GONE);
                 break;
 
             case MODE_AVATAR:
                 mIconView.setVisibility(GONE);
                 mCircularIconView.setVisibility(GONE);
                 mAvatarView.setVisibility(VISIBLE);
+                mCheckBoxView.setVisibility(GONE);
+                break;
+
+            case MODE_CHECKBOX:
+                mIconView.setVisibility(GONE);
+                mCircularIconView.setVisibility(GONE);
+                mAvatarView.setVisibility(GONE);
+                mCheckBoxView.setVisibility(VISIBLE);
                 break;
 
             case MODE_STANDARD:
@@ -539,9 +589,11 @@ public class ListItemView extends FrameLayout {
                 mIconView.setVisibility(GONE);
                 mCircularIconView.setVisibility(GONE);
                 mAvatarView.setVisibility(GONE);
+                mCheckBoxView.setVisibility(GONE);
                 break;
         }
         adjustPadding();
+        updateListeners();
     }
 
     /**
@@ -585,6 +637,34 @@ public class ListItemView extends FrameLayout {
         mCircularIconColor = Color.alpha(circularIconColor) == 0 ? mDefaultColor
                 : circularIconColor;
         mCircularIconView.setCircleColor(mCircularIconColor);
+    }
+
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if (mOnCheckedChangeListener != null) {
+            mOnCheckedChangeListener.onCheckedChanged(buttonView, isChecked);
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (getDisplayMode() == MODE_CHECKBOX) {
+            mCheckBoxView.setChecked(!mCheckBoxView.isChecked());
+            return;
+        }
+        if (mOnClickListener != null) {
+            mOnClickListener.onClick(this);
+        }
+    }
+
+    @Override
+    public void setOnClickListener(@Nullable OnClickListener listener) {
+        mOnClickListener = listener;
+    }
+
+    public void setOnCheckedChangeListener(@Nullable OnCheckedChangeListener listener) {
+        mOnCheckedChangeListener = listener;
     }
 
     /**
@@ -710,6 +790,10 @@ public class ListItemView extends FrameLayout {
      */
     public ImageView getAvatarView() {
         return mAvatarView;
+    }
+
+    public CheckBox getCheckboxView() {
+        return mCheckBoxView;
     }
 
     private static class SavedState extends BaseSavedState {

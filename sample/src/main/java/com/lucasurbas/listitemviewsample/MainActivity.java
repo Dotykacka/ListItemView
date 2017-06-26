@@ -251,6 +251,12 @@ public class MainActivity extends AppCompatActivity implements ColorPickerDialog
                         .transform(new CircleTransform())
                         .into(listItemView.getAvatarView());
                 break;
+
+            case R.id.action_modeCheckbox:
+                listItemView.setDisplayMode(ListItemView.MODE_CHECKBOX);
+                listItemView.setIconResId(ListItemView.NULL);
+                attributeDisplayModeView.setSubtitle(R.string.attr_modeCheckbox);
+                break;
         }
     }
 

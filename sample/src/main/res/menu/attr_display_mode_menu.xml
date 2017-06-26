@@ -18,4 +18,8 @@
         android:id="@+id/action_modeAvatar"
         android:title="@string/attr_modeAvatar"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_modeCheckbox"
+        android:title="@string/attr_modeCheckbox"
+        app:showAsAction="never" />
 </menu>
