@@ -562,6 +562,7 @@ public class ListItemView
                 mCircularIconView.setVisibility(GONE);
                 mAvatarView.setVisibility(GONE);
                 mCheckBoxView.setVisibility(GONE);
+                mCheckBoxView.setOnCheckedChangeListener(null);
                 break;
 
             case MODE_CIRCULAR_ICON:
@@ -569,6 +570,7 @@ public class ListItemView
                 mCircularIconView.setVisibility(VISIBLE);
                 mAvatarView.setVisibility(GONE);
                 mCheckBoxView.setVisibility(GONE);
+                mCheckBoxView.setOnCheckedChangeListener(null);
                 break;
 
             case MODE_AVATAR:
@@ -576,6 +578,7 @@ public class ListItemView
                 mCircularIconView.setVisibility(GONE);
                 mAvatarView.setVisibility(VISIBLE);
                 mCheckBoxView.setVisibility(GONE);
+                mCheckBoxView.setOnCheckedChangeListener(null);
                 break;
 
             case MODE_CHECKBOX:
@@ -583,6 +586,7 @@ public class ListItemView
                 mCircularIconView.setVisibility(GONE);
                 mAvatarView.setVisibility(GONE);
                 mCheckBoxView.setVisibility(VISIBLE);
+                mCheckBoxView.setOnCheckedChangeListener(this);
                 break;
 
             case MODE_STANDARD:
@@ -591,6 +595,7 @@ public class ListItemView
                 mCircularIconView.setVisibility(GONE);
                 mAvatarView.setVisibility(GONE);
                 mCheckBoxView.setVisibility(GONE);
+                mCheckBoxView.setOnCheckedChangeListener(null);
                 break;
         }
         adjustPadding();
