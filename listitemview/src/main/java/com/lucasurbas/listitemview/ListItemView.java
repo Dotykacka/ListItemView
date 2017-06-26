@@ -25,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
+import android.widget.Checkable;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.FrameLayout;
@@ -46,7 +47,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  */
 public class ListItemView
         extends FrameLayout
-        implements OnClickListener, OnCheckedChangeListener {
+        implements Checkable, OnClickListener, OnCheckedChangeListener {
 
     // CONSTANTS
 
@@ -637,6 +638,21 @@ public class ListItemView
         mCircularIconColor = Color.alpha(circularIconColor) == 0 ? mDefaultColor
                 : circularIconColor;
         mCircularIconView.setCircleColor(mCircularIconColor);
+    }
+
+    @Override
+    public boolean isChecked() {
+        return getDisplayMode() == MODE_CHECKBOX && mCheckBoxView.isChecked();
+    }
+
+    @Override
+    public void setChecked(boolean checked) {
+        mCheckBoxView.setChecked(checked);
+    }
+
+    @Override
+    public void toggle() {
+        mCheckBoxView.setChecked(!mCheckBoxView.isChecked());
     }
 
 
